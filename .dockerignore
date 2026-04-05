@@ -42,3 +42,8 @@ doc/
 
 # Database scripts
 script/
+
+# Git (KEEP THIS!)
+!.git/
+.git/
+.gitignore
