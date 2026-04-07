@@ -13,6 +13,9 @@ import com.erp.bom.feature.product.mapper.ProductMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
@@ -85,6 +88,7 @@ public class ProductService {
         return product;
     }
 
+    @Cacheable(value = "products", key = "#id")
     public Product getById(UUID id) {
         return productMapper.selectById(id);
     }
@@ -111,6 +115,7 @@ public class ProductService {
         return productMapper.selectPage(pageParam, wrapper);
     }
 
+    @CacheEvict(value = "products", key = "#id")
     public Product update(UUID id, Product product) {
         Product existing = productMapper.selectById(id);
         if (existing == null) {
@@ -121,6 +126,7 @@ public class ProductService {
         return productMapper.selectById(id);
     }
 
+    @CacheEvict(value = "products", key = "#id")
     public void delete(UUID id) {
         Product product = productMapper.selectById(id);
         if (product == null) {

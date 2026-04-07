@@ -1,6 +1,7 @@
 package com.erp.bom.feature.product.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.erp.bom.feature.product.dto.BomRowRequest;
 import com.erp.bom.feature.product.dto.BomRowResponse;
 import com.erp.bom.feature.product.entity.BomRow;
@@ -40,6 +41,16 @@ public class BomRowServiceImpl implements BomRowService {
 
         List<BomRow> rows = bomRowMapper.selectList(wrapper);
         return toResponseList(rows);
+    }
+
+    @Override
+    public Page<BomRowResponse> getBomRowsByProductId(UUID productId, int page, int size) {
+        Page<BomRow> pageParam = new Page<>(page, size);
+        LambdaQueryWrapper<BomRow> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(BomRow::getProductId, productId)
+                .orderByAsc(BomRow::getStt);
+        Page<BomRow> result = bomRowMapper.selectPage(pageParam, wrapper);
+        return toResponsePage(result);
     }
 
     @Override
@@ -219,5 +230,15 @@ public class BomRowServiceImpl implements BomRowService {
             responses.add(toResponse(entity));
         }
         return responses;
+    }
+
+    private Page<BomRowResponse> toResponsePage(Page<BomRow> page) {
+        List<BomRowResponse> records = new ArrayList<>();
+        for (BomRow entity : page.getRecords()) {
+            records.add(toResponse(entity));
+        }
+        Page<BomRowResponse> result = new Page<>(page.getCurrent(), page.getSize(), page.getTotal());
+        result.setRecords(records);
+        return result;
     }
 }

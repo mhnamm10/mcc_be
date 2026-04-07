@@ -2,24 +2,24 @@
 
 ## Project Overview
 
-This is a Spring Boot 4.0.3 application with Java 17, using Maven as the build tool. The project is an ERP system (BOM management) using MyBatis Plus with PostgreSQL.
+Spring Boot 4.0.3 + Java 17 + Maven. ERP system (BOM management) using MyBatis Plus with PostgreSQL.
 
 ## Build Commands
 
 ```bash
-# Build the project
+# Build project
 mvn clean install
 
-# Run the application
+# Run application
 mvn spring-boot:run
 
-# Build without running tests
+# Build without tests
 mvn clean install -DskipTests
 
-# Run a specific test class
+# Run specific test class
 mvn test -Dtest=ProductionOrderServiceTest
 
-# Run a specific test method
+# Run specific test method
 mvn test -Dtest=ProductionOrderServiceTest#testCreate
 
 # Package as JAR
@@ -30,70 +30,27 @@ mvn package
 
 ```
 src/main/java/com/erp/bom/
-├── ErpBomApplication.java          # Main entry point
-├── config/                         # Configuration classes
-├── feature/                       # Feature modules (package-by-feature)
-│   ├── auth/
-│   │   ├── controller/
-│   │   ├── service/
-│   │   ├── mapper/
-│   │   ├── entity/
-│   │   └── dto/
-│   ├── production/
-│   │   ├── controller/
-│   │   ├── service/
-│   │   │   └── impl/
-│   │   ├── mapper/
-│   │   └── entity/
-│   ├── product/
-│   │   ├── controller/
-│   │   ├── service/
-│   │   ├── mapper/
-│   │   ├── entity/
-│   │   └── dto/
-│   └── material/
-│       ├── controller/
-│       ├── service/
-│       ├── mapper/
-│       └── entity/
-└── utils/
-    └── excel/
+├── ErpBomApplication.java
+├── config/
+├── feature/
+│   ├── auth/, production/, product/, material/, common/, cloudinary/
+│   └── [feature]/
+│       ├── controller/, service/, mapper/, entity/, dto/
+└── utils/excel/
 ```
 
 ## Code Style Guidelines
 
 ### Naming Conventions
-
-- **Classes**: PascalCase (e.g., `ProductionOrderService`, `ProductionOrder`)
-- **Methods**: camelCase (e.g., `getById`, `createProductionOrder`)
-- **Variables**: camelCase (e.g., `productionOrderMapper`, `orderNo`)
-- **Constants**: UPPER_SNAKE_CASE (e.g., `MAX_FILE_SIZE`, `EXCEL_CONTENT_TYPE`)
-- **Enums**: lowercase with underscores (e.g., `draft`, `in_progress`, `done`)
-- **Packages**: lowercase (e.g., `com.erp.bom.feature.production`)
-
-### Import Organization
-
-Organize imports in the following order:
-1. Java/Jakarta EE imports
-2. Spring Framework imports
-3. Third-party library imports (MyBatis Plus, Lombok, etc.)
-4. Internal package imports
-
-```java
-import jakarta.servlet.http.HttpServletResponse;
-import org.springframework.stereotype.Service;
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.erp.bom.feature.production.entity.ProductionOrder;
-```
+- **Classes**: PascalCase (`ProductionOrderService`)
+- **Methods/Variables**: camelCase (`getById`, `orderNo`)
+- **Constants**: UPPER_SNAKE_CASE (`MAX_FILE_SIZE`)
+- **Packages**: lowercase (`com.erp.bom.feature.production`)
 
 ### Constructor Injection (Required)
-
-Always use constructor injection with `final` fields. Do not use field injection.
-
 ```java
 @Service
 public class ProductionOrderService {
-
     private final ProductionOrderMapper productionOrderMapper;
 
     public ProductionOrderService(ProductionOrderMapper productionOrderMapper) {
@@ -103,19 +60,11 @@ public class ProductionOrderService {
 ```
 
 ### Controller Guidelines
-
-- Use `@RestController` and `@RequestMapping` for REST endpoints
-- Always inject service via constructor
-- Use SLF4J for logging with the class-level logger
-- Log incoming requests and responses for debugging
-
 ```java
 @RestController
 @RequestMapping("/api/production-orders")
 public class ProductionOrderController {
-
     private static final Logger log = LoggerFactory.getLogger(ProductionOrderController.class);
-
     private final ProductionOrderService productionOrderService;
 
     public ProductionOrderController(ProductionOrderService productionOrderService) {
@@ -125,134 +74,78 @@ public class ProductionOrderController {
     @PostMapping
     public ResponseEntity<ProductionOrder> create(@RequestBody ProductionOrder productionOrder) {
         log.info("[POST /api/production-orders] Payload: {}", productionOrder);
-        // ...
+        return ResponseEntity.status(HttpStatus.CREATED).body(productionOrderService.create(productionOrder));
     }
 }
 ```
 
 ### Service Layer
-
-- Business logic goes in service layer
-- Service implementations go in `impl/` subpackage
-- Use appropriate HTTP status codes (201 for created, 404 for not found, etc.)
-- Handle exceptions with meaningful messages
-
-```java
-public ProductionOrder update(Long id, ProductionOrder productionOrder) {
-    ProductionOrder existing = productionOrderMapper.selectById(id);
-    if (existing == null) {
-        throw new RuntimeException("ProductionOrder not found with id: " + id);
-    }
-    // ...
-}
-```
-
-### Error Handling
-
-- Use custom exceptions for domain-specific errors
-- Include meaningful error messages with entity identifiers
-- Return appropriate HTTP status codes
-- Consider global exception handling with `@ControllerAdvice`
+- Business logic in service layer
+- Use MyBatis Plus `LambdaQueryWrapper` for dynamic queries
+- Throw `RuntimeException` with meaningful messages for not found errors
+- Return appropriate HTTP status codes (201 created, 404 not found, etc.)
 
 ### Entity/Database Layer
-
-- Use MyBatis Plus for database operations
-- Entity classes should follow database table naming (snake_case in DB, camelCase in Java)
-- Use `@TableName` annotation if table name differs from entity name
+- Use MyBatis Plus annotations (`@TableName`, `@TableField`)
 - Use enums for fixed status values
+- Entity fields follow camelCase, database columns use snake_case
+
+### Import Order
+1. Java/Jakarta EE
+2. Spring Framework
+3. Third-party (MyBatis Plus, Lombok)
+4. Internal packages
 
 ```java
-public enum ProductionOrderStatus {
-    draft,
-    confirmed,
-    in_progress,
-    done,
-    cancelled
-}
+import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.stereotype.Service;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.erp.bom.feature.production.entity.ProductionOrder;
 ```
 
 ### Utility Classes
-
-- Utility classes should have a private constructor to prevent instantiation
-- Use `public static final` for constants
-- Keep methods focused and single-purpose
-
 ```java
 public class ExcelUtil {
-
-    private ExcelUtil() {}
-
-    public static final String EXCEL_CONTENT_TYPE = "application/vnd.openxmlformats...";
-    // ...
+    private ExcelUtil() {}  // Prevent instantiation
+    public static final String EXCEL_CONTENT_TYPE = "application/vnd...";
 }
 ```
 
-### DTOs (Data Transfer Objects)
+### REST API Conventions
+- Use plural nouns: `/api/production-orders`
+- HTTP methods: GET (read), POST (create), PUT (update), DELETE (remove)
+- Path variables: `/api/production-orders/{id}`
+- Query parameters: `/api/production-orders?status=pending`
 
-- Create separate DTOs for requests and responses when needed
-- Use naming convention: `{EntityName}Request`, `{EntityName}Response`
-- Keep DTOs in the `dto` subpackage within each feature
+### DTOs
+- Use `{EntityName}Request` / `{EntityName}Response` naming
+- Keep DTOs in `dto/` subpackage within each feature
 
 ### Lombok Usage
-
-- Use `@Data` sparingly; prefer `@Getter`/`@Setter` when only specific methods are needed
+- Prefer `@Getter`/`@Setter` over `@Data` when only specific methods needed
 - Use `@Builder` for complex objects
-- Use `@AllArgsConstructor` and `@NoArgsConstructor` as needed
-- Always use `@TableField` when database column names differ from field names
+- Use `@TableField` when DB column names differ
 
-### REST API Conventions
+### Error Handling
+- Use custom exceptions for domain-specific errors
+- Include entity identifiers in error messages
+- Use global `@ControllerAdvice` for exception handling
 
-- Use plural nouns for resources: `/api/production-orders` (not `/api/production-order`)
-- Use proper HTTP methods: GET (read), POST (create), PUT (update), DELETE (remove)
-- Use path variables for resource identifiers: `/api/production-orders/{id}`
-- Use query parameters for filtering: `/api/production-orders?status=pending`
-
-### Documentation
-
-- Add Javadoc for public API methods
-- Document expected input/output formats
-- Use OpenAPI/Swagger annotations for API documentation (`@Operation`, `@ApiParam`, etc.)
-- Include meaningful comments for complex business logic
+### Security
+- JWT authentication implemented
+- Use `@PreAuthorize` for role-based access control
+- Never expose sensitive data in API responses
 
 ### Testing
-
 - Write unit tests for service layer
 - Use `@SpringBootTest` for integration tests
 - Mock external dependencies
-- Test edge cases and error scenarios
-
-### Database
-
-- PostgreSQL is used as the database
-- Use MyBatis Plus QueryWrapper for dynamic queries
-- Always use parameterized queries to prevent SQL injection
-
-### API Response Patterns
-
-```java
-// Single resource
-ResponseEntity<ProductionOrder> or ResponseEntity.notFound().build()
-
-// Collections
-ResponseEntity<List<ProductionOrder>> or ResponseEntity.ok(list)
-
-// Pagination
-ResponseEntity<Page<ProductionOrder>>
-```
-
-### Security
-
-- JWT authentication is implemented
-- Use `@PreAuthorize` for role-based access control when needed
-- Never expose sensitive data in API responses
 
 ## Key Dependencies
-
 - Spring Boot 4.0.3
 - MyBatis Plus 3.5.5
-- PostgreSQL
-- Lombok
-- EasyExcel (Alibaba) for Excel operations
-- SpringDoc OpenAPI for API documentation
-- Cloudinary for image storage
-- P6Spy for SQL logging
+- PostgreSQL, Lombok
+- EasyExcel 4.0.3
+- SpringDoc OpenAPI 2.3.0
+- Cloudinary 2.0.0
+- P6Spy 1.12.0 (SQL logging)

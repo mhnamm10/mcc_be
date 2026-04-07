@@ -121,8 +121,14 @@ public class ProductController {
     }
 
     @GetMapping("/{id}/bom")
-    public ResponseEntity<List<BomRowResponse>> getBomRows(@PathVariable UUID id) {
-        log.info("[GET /products/{}/bom]", id);
+    public ResponseEntity<?> getBomRows(
+            @PathVariable UUID id,
+            @RequestParam(required = false) Integer page,
+            @RequestParam(required = false) Integer size) {
+        log.info("[GET /products/{}/bom] page={}, size={}", id, page, size);
+        if (page != null && size != null) {
+            return ResponseEntity.ok(bomRowService.getBomRowsByProductId(id, page, size));
+        }
         return ResponseEntity.ok(bomRowService.getBomRowsByProductId(id));
     }
 

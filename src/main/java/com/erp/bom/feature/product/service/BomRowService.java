@@ -1,5 +1,6 @@
 package com.erp.bom.feature.product.service;
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.erp.bom.feature.product.dto.BomRowRequest;
 import com.erp.bom.feature.product.dto.BomRowResponse;
 import com.erp.bom.feature.product.entity.BomRow;
@@ -13,6 +14,8 @@ import java.util.UUID;
 public interface BomRowService {
 
     List<BomRowResponse> getBomRowsByProductId(UUID productId);
+
+    Page<BomRowResponse> getBomRowsByProductId(UUID productId, int page, int size);
 
     List<BomRow> getBomRowEntitiesByProductId(UUID productId);
 
