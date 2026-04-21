@@ -121,8 +121,23 @@ public class ProductService {
         if (existing == null) {
             throw new RuntimeException("Product not found with id: " + id);
         }
-        product.setId(id);
-        productMapper.updateById(product);
+
+        // Only update non-null fields to avoid overwriting with null
+        if (product.getCode() != null) {
+            existing.setCode(product.getCode());
+        }
+        if (product.getName() != null) {
+            existing.setName(product.getName());
+        }
+        if (product.getNote() != null) {
+            existing.setNote(product.getNote());
+        }
+        // Handle image separately - if provided, update it
+        if (product.getImage() != null) {
+            existing.setImage(product.getImage());
+        }
+
+        productMapper.updateById(existing);
         return productMapper.selectById(id);
     }
 

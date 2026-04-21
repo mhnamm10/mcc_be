@@ -1,5 +1,8 @@
 server:
   port: ${PORT:8080}
+  compression:
+    enabled: true
+  shutdown: graceful
 
 spring:
   application:
@@ -9,14 +12,22 @@ spring:
     username: ${DB_USERNAME:root}
     password: ${DB_PASSWORD:root123}
     driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 2
+      minimum-idle: 1
+      connection-timeout: 20000
+      idle-timeout: 300000
+      max-lifetime: 1200000
   jackson:
     time-zone: Asia/Ho_Chi_Minh
     date-format: yyyy-MM-dd HH:mm:ss
+    serialization:
+      write-dates-as-timestamps: false
 
 mybatis-plus:
   configuration:
     map-underscore-to-camel-case: true
-    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+    log-impl: org.apache.ibatis.logging.slf4j.Slf4jImpl
   global-config:
     db-config:
       id-type: auto
@@ -24,17 +35,17 @@ mybatis-plus:
       logic-delete-value: 1
       logic-not-delete-value: 0
 
-  cache:
-    type: caffeine
-    caffeine:
-      spec: maximumSize=500,expireAfterWrite=10m
+cache:
+  type: caffeine
+  caffeine:
+    spec: maximumSize=100,expireAfterWrite=5m
 
 logging:
   level:
-    com.erp.bom: DEBUG
-    org.springframework.web: INFO
+    root: WARN
+    com.erp.bom: INFO
   pattern:
-    console: "%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+    console: "%d{HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
 
 cloudinary:
    url: ${CLOUDINARY_URL:cloudinary://387828317835664:pczjanPmGwz5176N9NYuWGJQUaA@dmbcwrpro}
