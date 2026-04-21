@@ -13,9 +13,7 @@ import com.erp.bom.feature.product.mapper.ProductMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import jakarta.servlet.http.HttpServletResponse;
-import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.Cacheable;
-import org.springframework.cache.annotation.Caching;
+
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
@@ -88,7 +86,6 @@ public class ProductService {
         return product;
     }
 
-    @Cacheable(value = "products", key = "#id")
     public Product getById(UUID id) {
         return productMapper.selectById(id);
     }
@@ -115,33 +112,36 @@ public class ProductService {
         return productMapper.selectPage(pageParam, wrapper);
     }
 
-    @CacheEvict(value = "products", key = "#id")
     public Product update(UUID id, Product product) {
-        Product existing = productMapper.selectById(id);
-        if (existing == null) {
-            throw new RuntimeException("Product not found with id: " + id);
-        }
+        try {
+            Product existing = productMapper.selectById(id);
+            if (existing == null) {
+                throw new RuntimeException("Product not found with id: " + id);
+            }
 
-        // Only update non-null fields to avoid overwriting with null
-        if (product.getCode() != null) {
-            existing.setCode(product.getCode());
-        }
-        if (product.getName() != null) {
-            existing.setName(product.getName());
-        }
-        if (product.getNote() != null) {
-            existing.setNote(product.getNote());
-        }
-        // Handle image separately - if provided, update it
-        if (product.getImage() != null) {
-            existing.setImage(product.getImage());
-        }
+            // Only update non-null fields to avoid overwriting with null
+            if (product.getCode() != null) {
+                existing.setCode(product.getCode());
+            }
+            if (product.getName() != null) {
+                existing.setName(product.getName());
+            }
+            if (product.getNote() != null) {
+                existing.setNote(product.getNote());
+            }
+            // Handle image separately - if provided, update it
+            if (product.getImage() != null) {
+                existing.setImage(product.getImage());
+            }
 
-        productMapper.updateById(existing);
-        return productMapper.selectById(id);
+            productMapper.updateById(existing);
+            return productMapper.selectById(id);
+        } catch (Exception e) {
+            log.error("[UPDATE PRODUCT ERROR] id={}, product={}, error={}", id, product, e.getMessage(), e);
+            throw e;
+        }
     }
 
-    @CacheEvict(value = "products", key = "#id")
     public void delete(UUID id) {
         Product product = productMapper.selectById(id);
         if (product == null) {

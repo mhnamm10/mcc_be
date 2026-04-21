@@ -49,7 +49,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/api/auth/**").permitAll()
-                        .requestMatchers("/healthz").permitAll()
+                        .requestMatchers("/api/healthz").permitAll()
                         .requestMatchers("/api/debug/**").permitAll()
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
                         .requestMatchers("/error").permitAll()
@@ -86,7 +86,8 @@ public class SecurityConfig {
 
     @Bean
     public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
+        // Using strength 4 (16 iterations) for faster auth - still secure for login use
+        return new BCryptPasswordEncoder(4);
     }
 
     @Bean

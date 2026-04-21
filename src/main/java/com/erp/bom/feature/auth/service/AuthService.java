@@ -34,10 +34,6 @@ public class AuthService {
         wrapper.eq(User::getUsername, request.getUsername());
         User user = userMapper.selectOne(wrapper);
 
-        log.info("[LOGIN] User found: {}, password in DB: {} chars", 
-            user != null ? user.getUsername() : "NULL",
-            user != null ? user.getPassword().length() : 0);
-
         // Validate credentials
         if (user == null) {
             log.warn("[LOGIN] User not found: {}", request.getUsername());
@@ -45,7 +41,6 @@ public class AuthService {
         }
         
         boolean passwordMatches = passwordEncoder.matches(request.getPassword(), user.getPassword());
-        log.info("[LOGIN] Password match result: {}", passwordMatches);
         
         if (!passwordMatches) {
             log.warn("[LOGIN] Password mismatch for user: {}", request.getUsername());
@@ -54,7 +49,7 @@ public class AuthService {
 
         // Generate token
         String token = jwtService.generateToken(user.getUsername(), user.getId(), user.getRole());
-        log.info("[LOGIN] Token generated successfully for: {}", user.getUsername());
+        log.info("[LOGIN] Login successful for: {}", user.getUsername());
 
         // Build response
         UserResponse userResponse = new UserResponse(
