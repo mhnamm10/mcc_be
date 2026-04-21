@@ -21,8 +21,7 @@ spring:
   jackson:
     time-zone: Asia/Ho_Chi_Minh
     date-format: yyyy-MM-dd HH:mm:ss
-    serialization:
-      # WRITE_DATES_AS_TIMESTAMPS removed - deprecated in Jackson 2.6+, dates now ISO-8601 by default
+
 
 mybatis-plus:
   configuration:
